@@ -1,6 +1,6 @@
 use std::ffi::OsStr;
 use std::io::ErrorKind;
-use std::process::{Command, Output};
+use std::process::{Command, ExitStatus, Output};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -8,10 +8,10 @@ pub enum BetterCommandError {
     #[error("Command not found: {executable:?}")]
     NotFound { executable: String },
 
-    #[error("{executable:?} failed with exit code {exit_code:?}:\n{error:?}")]
+    #[error("{executable:?} failed with {status}\n{error:?}")]
     ExitStatusError {
         executable: String,
-        exit_code: i32,
+        status: ExitStatus,
         error: String,
     },
 
@@ -70,7 +70,7 @@ impl BetterCommand {
             true => Ok(u8vec_to_string(output.stdout)),
             false => Err(BetterCommandError::ExitStatusError {
                 executable: self.executable.clone(),
-                exit_code: output.status.code().unwrap(),
+                status: output.status,
                 error: u8vec_to_string(output.stderr),
             }),
         }
