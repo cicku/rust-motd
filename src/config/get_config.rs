@@ -1,3 +1,4 @@
+use chrono::format::StrftimeItems;
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -18,7 +19,10 @@ pub enum ConfigError {
     ConfigNotFound,
 
     #[error("The configuration file must be .kdl or .toml. Found {0}.")]
-    ConfigFormatError(String),
+    ConfigFormatError(PathBuf),
+
+    #[error("Invalid time format {0:?}.")]
+    TimeFormatError(String),
 
     #[error(transparent)]
     ConfigHomeError(#[from] std::env::VarError),
@@ -60,14 +64,18 @@ pub fn get_config(config_path: Option<String>) -> Result<Config, ConfigError> {
 
     let extension = config_path
         .extension()
-        .expect("Could not determine extension for config file.");
-    let extension = extension
-        .to_str()
-        .expect("Could not determine extension for config file.");
+        .and_then(|extension| extension.to_str());
 
-    match extension {
-        "toml" => Ok(parse_toml(&config_str)?),
-        "kdl" => Ok(parse_kdl(&config_path, &config_str)?),
-        other => Err(ConfigError::ConfigFormatError(other.to_string())),
+    let config = match extension {
+        Some("toml") => parse_toml(&config_str)?,
+        Some("kdl") => parse_kdl(&config_path, &config_str)?,
+        _ => return Err(ConfigError::ConfigFormatError(config_path)),
+    };
+
+    let time_format = &config.global.time_format;
+    if StrftimeItems::new(time_format).parse().is_err() {
+        return Err(ConfigError::TimeFormatError(time_format.to_string()));
     }
+
+    Ok(config)
 }
