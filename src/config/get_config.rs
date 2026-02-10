@@ -25,9 +25,6 @@ pub enum ConfigError {
     TimeFormatError(String),
 
     #[error(transparent)]
-    ConfigHomeError(#[from] std::env::VarError),
-
-    #[error(transparent)]
     IOError(#[from] std::io::Error),
 
     #[error(transparent)]
@@ -46,12 +43,20 @@ fn get_config_path(config_path: Option<String>) -> Result<PathBuf, ConfigError> 
         return Ok(PathBuf::from(file_path));
     }
 
-    let config_base = env::var("XDG_CONFIG_HOME").unwrap_or(env::var("HOME")? + "/.config");
+    let config_bases = [
+        env::var("XDG_CONFIG_HOME").map(PathBuf::from),
+        env::var("HOME").map(|home| Path::new(&home).join(".config")),
+    ];
 
-    for basename in ["rust-motd/config.kdl", "rust-motd/config.toml"] {
-        let config_base = Path::new(&config_base).join(Path::new(basename));
-        if config_base.exists() {
-            return Ok(config_base);
+    for config_base in config_bases.into_iter().flatten() {
+        if !config_base.is_absolute() {
+            continue;
+        }
+        for basename in ["rust-motd/config.kdl", "rust-motd/config.toml"] {
+            let path = config_base.join(basename);
+            if path.exists() {
+                return Ok(path);
+            }
         }
     }
 
