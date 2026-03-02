@@ -59,10 +59,6 @@ impl BetterCommand {
         })
     }
 
-    pub fn get_output_string(&mut self) -> Result<String, BetterCommandError> {
-        Ok(u8vec_to_string(self.output()?.stdout))
-    }
-
     pub fn check_status_and_get_output_string(&mut self) -> Result<String, BetterCommandError> {
         let output = self.output()?;
 
