@@ -11,6 +11,8 @@
 - Print cg_stats errors on standard output so they appear in a generated MOTD
   file
 - Report an error instead of panicking when a command is killed by a signal
+- Keep warnings for missing Docker containers and Docker Compose stacks in
+  configuration order
 - Fix crash with a small `progress-width`
 - Fix progress bar alignment with multibyte prefix and suffix characters
 - Report `systemctl` failures instead of showing an empty service status
