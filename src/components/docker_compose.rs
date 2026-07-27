@@ -103,9 +103,17 @@ impl DockerCompose {
         let mut prepared_stacks: Vec<PreparedStack> = vec![];
 
         for ComposeStack { path, display_name } in self.stacks.iter() {
-            let path = fs::canonicalize(&*shellexpand::tilde(path))?
-                .to_string_lossy()
-                .to_string();
+            let path = match fs::canonicalize(&*shellexpand::tilde(path)) {
+                Ok(path) => path.to_string_lossy().to_string(),
+                Err(err) => {
+                    prepared_stacks.push(PreparedStack {
+                        display_name: display_name.clone(),
+                        max_container_name: 0,
+                        containers: Err(format!("{path}: {err}")),
+                    });
+                    continue;
+                }
+            };
 
             let containers = api
                 .containers()

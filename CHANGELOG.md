@@ -13,6 +13,8 @@
 - Report an error instead of panicking when a command is killed by a signal
 - Keep warnings for missing Docker containers and Docker Compose stacks in
   configuration order
+- Report a missing Docker Compose stack or SSL certificate on its own line
+  instead of hiding the whole component
 - Fix crash with a small `progress-width`
 - Fix progress bar alignment with multibyte prefix and suffix characters
 - Report `systemctl` failures instead of showing an empty service status
