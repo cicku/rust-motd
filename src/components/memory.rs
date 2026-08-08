@@ -11,7 +11,8 @@ use crate::default_prepare;
 
 #[derive(knus::Decode, Debug, Deserialize)]
 pub struct Memory {
-    #[knus(property)]
+    #[knus(property, default)]
+    #[serde(default)]
     swap_pos: SwapPosition,
 }
 
