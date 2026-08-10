@@ -16,6 +16,8 @@
 - Report `systemctl` failures instead of showing an empty service status
 - Fix the message for an empty `user-service-status` referring to system
   services
+- Only reformat the location in weather output, keeping plus signs in
+  temperatures and leaving responses from a custom `url` unchanged
 
 ## [2.1.2] 2025-12-26
 
