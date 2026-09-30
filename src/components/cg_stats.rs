@@ -17,6 +17,7 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use termion::{color, style};
 use thiserror::Error;
+use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 
 use crate::component::{Component, Constraints, PrepareError, PrepareReturn};
 use crate::config::global_config::GlobalConfig;
@@ -104,11 +105,11 @@ impl Component for CgStats {
             }
             for stat in data {
                 println!(
-                    "{indent}{indent}{name:<width$} {percent:3.0}% {bar}",
+                    "{indent}{indent}{name}{padding} {percent:3.0}% {bar}",
                     name = stat.name,
+                    padding = " ".repeat(prepared.max_name_width - stat.name.width()),
                     bar = format_bar(global_config, bar_width, stat.load),
                     percent = stat.load * 100.0,
-                    width = prepared.max_name_width,
                 );
             }
         }
@@ -183,7 +184,7 @@ impl CgStats {
             .users
             .iter()
             .chain(prepared_cg_stats.services.iter())
-            .map(|s| s.name.chars().count())
+            .map(|s| s.name.width())
             .max()
             .unwrap_or(0);
         Ok(Some(prepared_cg_stats))
@@ -216,8 +217,7 @@ fn full_color(ratio: f64) -> String {
 
 fn format_bar(global_config: &GlobalConfig, width: usize, full_ratio: f64) -> String {
     let without_ends_width = width.saturating_sub(
-        global_config.progress_suffix.chars().count()
-            + global_config.progress_prefix.chars().count(),
+        global_config.progress_suffix.width() + global_config.progress_prefix.width(),
     );
 
     let bar_full = ((without_ends_width as f64) * full_ratio.clamp(0.0, 1.0)).round() as usize;
@@ -309,10 +309,22 @@ where
         let e = entry?;
         if e.file_type()?.is_dir() {
             let stat = read_cg_stat(&e.path())?;
-            stats.insert(rename_key(&e.file_name().to_string_lossy()), stat);
+            let name = escape_invalid_utf8(e.file_name().as_encoded_bytes());
+            stats.insert(rename_key(&name), stat);
         }
     }
     Ok(stats)
+}
+
+fn escape_invalid_utf8(bytes: &[u8]) -> String {
+    let mut escaped = String::new();
+    for chunk in bytes.utf8_chunks() {
+        escaped.push_str(chunk.valid());
+        for byte in chunk.invalid() {
+            escaped.push_str(&format!("\\x{byte:02x}"));
+        }
+    }
+    escaped
 }
 
 // Copied and adapted from https://docs.rs/users/0.11.0/src/users/base.rs.html#326-360
@@ -384,11 +396,18 @@ fn read_cg_state() -> Result<State, CgStatsError> {
 }
 
 fn shorten_name(name: &str) -> String {
-    let max_len = 23;
-    if name.chars().count() <= max_len {
+    let max_width = 23;
+    if name.width() <= max_width {
         name.to_string()
     } else {
-        let mut name: String = name.chars().take(max_len - 3).collect();
+        let mut width = 0;
+        let mut name: String = name
+            .chars()
+            .take_while(|c| {
+                width += c.width().unwrap_or(0);
+                width <= max_width - 3
+            })
+            .collect();
         name += "...";
         name
     }
@@ -424,6 +443,21 @@ mod tests {
         assert_eq!(
             shorten_name(&format!("a{}", "ä".repeat(23))),
             format!("a{}...", "ä".repeat(19))
+        );
+        assert_eq!(
+            shorten_name(&"数".repeat(12)),
+            format!("{}...", "数".repeat(10))
+        );
+    }
+
+    #[test]
+    fn test_escape_invalid_utf8() {
+        assert_eq!(escape_invalid_utf8(b"sshd.service"), "sshd.service");
+        assert_eq!(escape_invalid_utf8("数据".as_bytes()), "数据");
+        assert_eq!(escape_invalid_utf8(b"caf\xe9.service"), "caf\\xe9.service");
+        assert_ne!(
+            escape_invalid_utf8(b"caf\xe9"),
+            escape_invalid_utf8(b"caf\xe8")
         );
     }
 }

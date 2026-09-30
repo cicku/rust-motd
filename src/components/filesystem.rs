@@ -8,6 +8,7 @@ use systemstat::Filesystem;
 use termion::{color, style};
 use thiserror::Error;
 use unicode_ellipsis::truncate_str;
+use unicode_width::UnicodeWidthStr;
 
 use crate::component::{Component, Constraints, PrepareReturn};
 use crate::config::global_config::GlobalConfig;
@@ -57,15 +58,15 @@ impl Component for Filesystems {
             .flatten()
             .map(|entry| {
                 vec![
-                    entry.filesystem_name.len() + INDENT_WIDTH,
-                    entry.dev.len(),
-                    entry.mount_point.len(),
-                    entry.fs_type.len(),
-                    entry.used.len(),
-                    entry.total.len(),
+                    entry.filesystem_name.width() + INDENT_WIDTH,
+                    entry.dev.width(),
+                    entry.mount_point.width(),
+                    entry.fs_type.width(),
+                    entry.used.width(),
+                    entry.total.width(),
                 ]
             })
-            .chain(iter::once(HEADER.iter().map(|x| x.len()).collect()))
+            .chain(iter::once(HEADER.iter().map(|x| x.width()).collect()))
             .fold(vec![0; HEADER.len()], |acc, x| {
                 x.iter()
                     .zip(acc.iter())
@@ -78,8 +79,7 @@ impl Component for Filesystems {
         let fs_display_width =
             column_sizes.iter().sum::<usize>() + (HEADER.len() - 2) * INDENT_WIDTH;
         let bar_width = fs_display_width.saturating_sub(
-            global_config.progress_prefix.chars().count()
-                + global_config.progress_suffix.chars().count(),
+            global_config.progress_prefix.width() + global_config.progress_suffix.width(),
         );
 
         let prepared_filesystems = PreparedFilesystems {
@@ -237,7 +237,7 @@ fn print_row<'a>(items: [&str; 6], column_sizes: impl IntoIterator<Item = &'a us
             items
                 .iter()
                 .zip(column_sizes.into_iter())
-                .map(|(name, size)| format!("{name: <size$}")),
+                .map(|(name, size)| format!("{name}{}", " ".repeat(size - name.width()))),
             " ".repeat(INDENT_WIDTH)
         )
         .collect::<String>()
