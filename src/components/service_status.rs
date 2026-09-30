@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use termion::{color, style};
 use thiserror::Error;
+use unicode_width::UnicodeWidthStr;
 
 use crate::command::{BetterCommand, BetterCommandError};
 use crate::component::Component;
@@ -94,7 +95,7 @@ pub fn print_or_error(config: &[Service], user: bool) -> Result<(), ServiceStatu
 
     let padding = config
         .iter()
-        .map(|service| service.display_name.len())
+        .map(|service| service.display_name.width())
         .max()
         .unwrap();
 
@@ -112,7 +113,7 @@ pub fn print_or_error(config: &[Service], user: bool) -> Result<(), ServiceStatu
             "{}{}: {}{}{}{}",
             " ".repeat(INDENT_WIDTH),
             display_name,
-            " ".repeat(padding - display_name.len()),
+            " ".repeat(padding - display_name.width()),
             status_color,
             status,
             style::Reset,

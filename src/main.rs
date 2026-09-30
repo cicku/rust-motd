@@ -1,4 +1,5 @@
 use clap::Parser;
+use std::path::PathBuf;
 use std::process::ExitCode;
 
 mod command;
@@ -11,7 +12,7 @@ mod component;
 
 #[derive(Parser, Debug)]
 struct Args {
-    config_path: Option<String>,
+    config_path: Option<PathBuf>,
 }
 
 #[tokio::main]

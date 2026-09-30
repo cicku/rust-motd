@@ -38,14 +38,14 @@ pub enum ConfigError {
     TomlError(#[from] TomlConfigError),
 }
 
-fn get_config_path(config_path: Option<String>) -> Result<PathBuf, ConfigError> {
+fn get_config_path(config_path: Option<PathBuf>) -> Result<PathBuf, ConfigError> {
     if let Some(file_path) = config_path {
-        return Ok(PathBuf::from(file_path));
+        return Ok(file_path);
     }
 
     let config_bases = [
-        env::var("XDG_CONFIG_HOME").map(PathBuf::from),
-        env::var("HOME").map(|home| Path::new(&home).join(".config")),
+        env::var_os("XDG_CONFIG_HOME").map(PathBuf::from),
+        env::var_os("HOME").map(|home| Path::new(&home).join(".config")),
     ];
 
     for config_base in config_bases.into_iter().flatten() {
@@ -63,7 +63,7 @@ fn get_config_path(config_path: Option<String>) -> Result<PathBuf, ConfigError> 
     Err(ConfigError::ConfigNotFound)
 }
 
-pub fn get_config(config_path: Option<String>) -> Result<Config, ConfigError> {
+pub fn get_config(config_path: Option<PathBuf>) -> Result<Config, ConfigError> {
     let config_path = get_config_path(config_path)?;
     let config_str = fs::read_to_string(&config_path)?;
 

@@ -3,6 +3,7 @@ use serde::Deserialize;
 use systemstat::{saturating_sub_bytes, Platform, System};
 use termion::{color, style};
 use thiserror::Error;
+use unicode_width::UnicodeWidthStr;
 
 use crate::component::Component;
 use crate::config::global_config::GlobalConfig;
@@ -110,8 +111,7 @@ fn format_bar(
     full_color: String,
 ) -> String {
     let without_ends_width = width.saturating_sub(
-        global_config.progress_suffix.chars().count()
-            + global_config.progress_prefix.chars().count(),
+        global_config.progress_suffix.width() + global_config.progress_prefix.width(),
     );
 
     let bar_full = ((without_ends_width as f64) * full_ratio) as usize;

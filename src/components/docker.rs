@@ -5,6 +5,7 @@ use docker_api::opts::ContainerListOpts;
 use docker_api::{Docker as DockerAPI, Result as DockerResult};
 use std::collections::HashMap;
 use termion::{color, style};
+use unicode_width::UnicodeWidthStr;
 
 use crate::component::Component;
 use crate::config::global_config::GlobalConfig;
@@ -85,7 +86,7 @@ pub fn print_container(container: Container, indent_width: usize, padding: usize
         "{indent}{name}: {padding}{color}{status}{reset}",
         indent = " ".repeat(indent_width),
         name = container.name,
-        padding = " ".repeat(padding - container.name.len()),
+        padding = " ".repeat(padding - container.name.width()),
         color = status_color,
         status = container.summary.status.unwrap_or(String::from("?")),
         reset = style::Reset,
@@ -138,7 +139,7 @@ impl Docker {
         let max_container_name = containers
             .iter()
             .flatten()
-            .map(|container| container.name.len())
+            .map(|container| container.name.width())
             .max()
             .unwrap_or(0);
 

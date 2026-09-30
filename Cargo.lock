@@ -1458,6 +1458,7 @@ dependencies = [
  "tokio",
  "toml",
  "unicode-ellipsis",
+ "unicode-width 0.2.3",
  "ureq",
 ]
 

@@ -4,6 +4,7 @@ use itertools::Itertools;
 use shellexpand;
 use std::fs;
 use termion::{color, style};
+use unicode_width::UnicodeWidthStr;
 
 use crate::component::Component;
 use crate::components::docker::{
@@ -164,7 +165,7 @@ impl DockerCompose {
 
             let max_container_name = containers
                 .iter()
-                .map(|container| container.name.len())
+                .map(|container| container.name.width())
                 .max()
                 .unwrap_or(0);
 
@@ -218,12 +219,12 @@ impl DockerCompose {
     fn print_count(&self, prepared_stacks: Vec<PreparedStack>) {
         let longest_display_name = prepared_stacks
             .iter()
-            .map(|stack| stack.display_name.len())
+            .map(|stack| stack.display_name.width())
             .max()
             .unwrap_or(0);
 
         for prepared_stack in prepared_stacks.into_iter() {
-            let padding = " ".repeat(longest_display_name - prepared_stack.display_name.len());
+            let padding = " ".repeat(longest_display_name - prepared_stack.display_name.width());
             let containers = match prepared_stack.containers {
                 Ok(containers) => containers,
                 Err(message) => {

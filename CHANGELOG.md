@@ -18,7 +18,11 @@
 - Report a missing Docker Compose stack or SSL certificate on its own line
   instead of hiding the whole component
 - Fix crash with a small `progress-width`
-- Fix progress bar alignment with multibyte prefix and suffix characters
+- Fix progress bar alignment with multibyte or wide prefix and suffix
+  characters
+- Align columns by display width so CJK and other non-ASCII names line up
+- Support configuration paths, `HOME`, and `XDG_CONFIG_HOME` that are not
+  valid UTF-8
 - Support mount points with spaces and other characters escaped in
   `/proc/mounts`
 - Report a missing filesystem on its own line instead of hiding the whole
