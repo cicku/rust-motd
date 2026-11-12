@@ -2,6 +2,8 @@
 
 - Exit with a nonzero status on configuration errors
 - Fix configuration file lookup in `$XDG_CONFIG_HOME` and `$HOME/.config`
+- Fix missing defaults for `swap-pos` in `memory`, and for `prefix` in
+  `[uptime]` and `color` in `[banner]` in TOML configurations
 - Reject an invalid `time-format` when loading the configuration instead of
   panicking
 - Track cgroups by their full name in cg_stats

@@ -10,7 +10,8 @@ use crate::default_prepare;
 
 #[derive(knus::Decode, Debug, Deserialize)]
 pub struct Command {
-    #[knus(property, default=Color::White)]
+    #[knus(property, default)]
+    #[serde(default)]
     color: Color,
     #[knus(argument)]
     command: String,
@@ -26,7 +27,7 @@ impl Component for Command {
     default_prepare!();
 }
 
-#[derive(knus::DecodeScalar, Debug, Deserialize)]
+#[derive(knus::DecodeScalar, Debug, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
 enum Color {
     Black,
@@ -36,6 +37,7 @@ enum Color {
     Blue,
     Magenta,
     Cyan,
+    #[default]
     White,
     LightBlack,
     LightRed,
